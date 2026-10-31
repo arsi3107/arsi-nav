@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arsi Nav - Автомагнитола Edition</title>
+<style>
+:root {
+  --bg: #030a1c;
+  --pn: rgba(6, 20, 48, 0.85);
+  --ln: rgba(94, 240, 255, 0.35);
+  --b: #1aa7ff;
+  --c: #5ef0ff;
+  --tx: #e8f6ff;
+  --mu: #8fb4d6;
+  color-scheme: dark;
+  box-sizing: border-box;
+}
+*, *:before, *:after { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  color: var(--tx);
+  font-family: "Segoe UI", Roboto, system-ui, sans-serif;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+
+/* Верхняя панель */
+#top {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 16px;
+  background: linear-gradient(180deg, #07204a, #041633);
+  border-bottom: 1px solid var(--ln);
+  z-index: 30;
+  position: relative;
+  height: 64px;
+}
+.ib {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--ln);
+  background: rgba(26, 167, 255, 0.14);
+  font-size: 24px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pb {
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 12px;
+  border: 0;
+  background: linear-gradient(135deg, #1aa7ff, #0a5bff);
+  font-weight: 700;
+  font-size: 16px;
+  box-shadow: 0 0 14px rgba(26, 167, 255, 0.45);
+  flex: none;
+}
+.pb:active, .ib:active { filter: brightness(1.3); }
+
+#sw { flex: 1; position: relative; }
+#q {
+  width: 100%;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--ln);
+  background: rgba(2, 10, 28, 0.85);
+  color: var(--tx);
+  font-size: 18px;
+  padding: 0 16px;
+  outline: none;
+}
+#q:focus { border-color: var(--c); box-shadow: 0 0 16px rgba(94, 240, 255, 0.35); }
+
+/* Основная карта */
+#mp { flex: 1; position: relative; width: 100%; height: calc(100% - 94px); overflow: hidden; }
+#map { position: absolute; inset: 0; touch-action: none; display: block; width: 100%; height: 100%; }
+
+/* Виджеты на карте */
+.gl {
+  position: absolute;
+  background: var(--pn);
+  border: 1px solid var(--ln);
+  border-radius: 16px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 20px rgba(26, 167, 255, 0.2);
+  z-index: 10;
+}
+#turn { left: 16px; bottom: 16px; display: flex; align-items: center; gap: 14px; padding: 10px 18px; }
+#ar { width: 50px; height: 50px; transition: transform .3s; }
+#td { display: block; font-size: 28px; font-weight: 800; color: var(--c); line-height: 1.1; }
+#tt { font-size: 14px; color: var(--mu); }
+
+#spd { right: 16px; bottom: 16px; padding: 10px 20px; text-align: right; }
+#sp { font-size: 48px; font-weight: 800; line-height: 1; color: #fff; text-shadow: 0 0 14px var(--b); }
+#spd small { font-size: 16px; color: var(--mu); margin-left: 4px; }
+#eta { font-size: 16px; font-weight: 700; color: var(--c); margin-top: 4px; }
+#gs { font-size: 12px; color: var(--mu); margin-top: 2px; }
+
+/* Кнопки управления без наслоения */
+.ct {
+  position: absolute;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 15;
+}
+#ctlL { left: 16px; }
+#ctlR { right: 16px; }
+.ct button {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  border: 1px solid var(--ln);
+  background: var(--pn);
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ct button.on { background: var(--b); box-shadow: 0 0 16px var(--b); }
+
+/* Боковая шторка */
+#dr {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: min(480px, 100%);
+  background: rgba(3, 12, 32, 0.96);
+  border-right: 1px solid var(--c);
+  z-index: 40;
+  transform: translateX(-105%);
+  transition: transform .3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  padding: 166x;
+  gap: 12px;
+}
+#dr.open { transform: translateX(0); }
+.tabs { display: flex; gap: 8px; }
+.tabs button {
+  flex: 1;
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--ln);
+  background: transparent;
+  font-size: 16px;
+}
+.tabs button.on { background: var(--b); font-weight: 700; }
+
+.sec { display: none; flex: 1; min-height: 0; flex-direction: column; gap: 10px; }
+.sec.on { display: flex; }
+.add { height: 46px; border-radius: 12px; border: 1px dashed var(--c); background: rgba(94, 240, 255, 0.08); font-size: 16px; }
+
+/* Список видео */
+.vg { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; overflow-y: auto; flex: 1; align-content: start; }
+.vc { border-radius: 12px; overflow: hidden; background: #0a1d44; border: 1px solid var(--ln); cursor: pointer; }
+.vc:active { filter: brightness(1.3); }
+.vc video, .vc img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: #02102a; }
+.vc span { display: block; padding: 8px; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Видеоплеер во весь экран */
+#vf { position: fixed; inset: 0; z-index: 100; background: #000; display: none; align-items: center; justify-content: center; }
+#vf.on { display: flex; }
+#vf video { width: 100%; height: 100%; }
+#vx { position: absolute; top: 16px; right: 16px; width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--ln); background: rgba(3,12,32,.8); font-size: 24px; z-index: 101; }
+
+/* Экран загрузки */
+#boot {
+  position: fixed; inset: 0; z-index: 200;
+  background: radial-gradient(circle at 50% 45%, #06214d, #020817 70%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  transition: opacity .8s, visibility .8s;
+}
+#boot.off { opacity: 0; visibility: hidden; }
+.hud { width: min(40vh, 40vw); height: min(40vh, 40vw); }
+.hud * { fill: none; stroke: var(--c); transform-origin: 0 0; }
+.r1 { stroke-width: 3; stroke-dasharray: 60 14 6 14; animation: sp 9s linear infinite; }
+.r2 { stroke: var(--b)!important; stroke-width: 8; stroke-dasharray: 120 80; animation: sp 5s linear infinite reverse; }
+.core { fill: rgba(26,167,255,.25)!important; stroke-width: 3; }
+@keyframes sp { to { transform: rotate(360deg); } }
+#boot h1 { margin: 0; font-size: 36px; letter-spacing: .3em; color: var(--c); text-shadow: 0 0 18px var(--b); }
+.bar { width: min(80vw, 400px); height: 6px; border-radius: 4px; background: rgba(94, 240, 255, 0.15); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--b), var(--c)); transition: width .4s; }
+
+footer { height: 30px; display: flex; align-items: center; justify-content: center; background: #041633; border-top: 1px solid var(--ln); font-size: 14px; letter-spacing: .15em; color: var(--c); flex: none; }
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <svg class="hud" viewBox="-200 -200 400 400">
+    <circle class="r1" r="185"/>
+    <circle class="r2" r="160"/>
+    <circle class="core" r="62"/>
+  </svg>
+  <h1>ARSI NAV</h1>
+  <div id="bt">Проверка разрешений...</div>
+  <div class="bar"><i id="bp"></i></div>
+</div>
+
+<header id="top">
+  <button class="ib" id="mb" title="Меню">☰</button>
+  <div id="sw">
+    <input id="q" placeholder="Поиск места или адреса..." autocomplete="off">
+  </div>
+  <button class="pb" id="go">Маршрут</button>
+</header>
+
+<main id="mp">
+  <canvas id="map"></canvas>
+
+  <div class="ct" id="ctlL">
+    <button id="fl" class="on" title="Мое местоположение">⌖</button>
+    <button id="cal" title="Точка">📍</button>
+    <button id="dm" title="Демо">▶</button>
+  </div>
+
+  <div class="ct" id="ctlR">
+    <button id="zi" title="Приблизить">+</button>
+    <button id="zo" title="Отдалить">−</button>
+  </div>
+
+  <div class="gl" id="turn">
+    <svg id="ar" viewBox="-50 -50 100 100">
+      <path d="M0-40L30-8H12V38H-12V-8H-30Z" fill="#5ef0ff" style="filter:drop-shadow(0 0 6px #1aa7ff)"/>
+    </svg>
+    <div>
+      <b id="td">Прямо</b>
+      <span id="tt">через 500 м</span>
+    </div>
+  </div>
+
+  <div class="gl" id="spd">
+    <b id="sp">0</b><small>км/ч</small>
+    <div id="eta">-- мин · -- км</div>
+    <div id="gs">GPS: Поиск спутников...</div>
+  </div>
+
+  <aside id="dr">
+    <div class="tabs">
+      <button class="on" data-t="m">🎵 Музыка</button>
+      <button data-t="v" id="btn-video-tab">🎬 Видео</button>
+      <button id="cl" style="flex:none;width:50px">✕</button>
+    </div>
+
+    <section class="sec on" id="s-m">
+      <div style="display:flex;gap:8px">
+        <button class="add" id="am" style="flex:1">Добавить треки</button>
+        <button class="add" id="sy" style="flex:1">Папка</button>
+      </div>
+      <ul id="ml" style="list-style:none;padding:0;margin:0;overflow-y:auto;flex:1;"></ul>
+    </section>
+
+    <section class="sec" id="s-v">
+      <button class="add" id="av">Добавить видеофайл</button>
+      <div id="vl" class="vg"></div>
+    </section>
+
+    <audio id="au"></audio>
+    <input type="file" id="fm" accept="audio/*" multiple hidden>
+    <input type="file" id="fv" accept="video/*" multiple hidden>
+    <input type="file" id="fd" webkitdirectory multiple hidden>
+  </aside>
+</main>
+
+<div id="vf">
+  <video id="vd" controls playsinline></video>
+  <button id="vx">✕</button>
+</div>
+
+<footer>by_Arsi</footer>
+
+<script>
+// Четкая высокое разрешение карта-схема для автомагнитолы (SVG-Векторный холст)
+const MAP_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+<rect width="800" height="800" fill="#05132d"/>
+<path d="M-100 200 Q 200 150 400 400 T 900 600" fill="none" stroke="#0c2d5e" stroke-width="80"/>
+<path d="M-100 200 Q 200 150 400 400 T 900 600" fill="none" stroke="#1aa7ff" stroke-width="12" stroke-dasharray="15 10"/>
+<path d="M100 -100 L 700 900" fill="none" stroke="#0c2d5e" stroke-width="40"/>
+<path d="M100 -100 L 700 900" fill="none" stroke="#5ef0ff" stroke-width="6"/>
+<circle cx="400" cy="400" r="180" fill="none" stroke="#0e3a78" stroke-width="30"/>
+<circle cx="400" cy="400" r="180" fill="none" stroke="#1aa7ff" stroke-width="4"/>
+<rect x="250" y="220" width="80" height="60" rx="8" fill="#0a2552" stroke="#1aa7ff" stroke-width="2"/>
+<rect x="480" y="520" width="120" height="90" rx="8" fill="#0a2552" stroke="#1aa7ff" stroke-width="2"/>
+<rect x="150" y="500" width="100" height="70" rx="8" fill="#0a2552" stroke="#5ef0ff" stroke-width="2"/>
+<circle cx="400" cy="400" r="12" fill="#5ef0ff"/>
+</svg>`;
+
+const canvas = document.getElementById('map');
+const ctx = canvas.getContext('2d');
+const mapImg = new Image();
+mapImg.src = MAP_SVG;
+
+function resizeCanvas() {
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+  renderMap();
+}
+window.addEventListener('resize', resizeCanvas);
+
+let zoom = 1;
+function renderMap() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (mapImg.complete) {
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.scale(zoom, zoom);
+    ctx.drawImage(mapImg, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+    ctx.restore();
+  }
+}
+mapImg.onload = renderMap;
+
+// Масштабирование
+document.getElementById('zi').onclick = () => { zoom = Math.min(zoom + 0.2, 3); renderMap(); };
+document.getElementById('zo').onclick = () => { zoom = Math.max(zoom - 0.2, 0.6); renderMap(); };
+
+// Управление шторкой и вкладками
+const dr = document.getElementById('dr');
+document.getElementById('mb').onclick = () => dr.classList.add('open');
+document.getElementById('cl').onclick = () => dr.classList.remove('open');
+
+document.querySelectorAll('.tabs button[data-t]').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('on'));
+    document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
+    btn.classList.add('on');
+    document.getElementById('s-' + btn.dataset.t).classList.add('on');
+  };
+});
+
+// Плеер видео
+const vf = document.getElementById('vf');
+const vd = document.getElementById('vd');
+document.getElementById('vx').onclick = () => {
+  vd.pause();
+  vf.classList.remove('on');
+};
+
+function playVideo(src) {
+  vd.src = src;
