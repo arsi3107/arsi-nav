@@ -2,9 +2,9 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-  <link rel="manifest" href="manifest.json">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Arsi Edition</title>
+<link rel="manifest" href="manifest.json">
+<title>H.A.N Edition</title>
 <style>
 :root {
   --bg: #030a1c;
@@ -144,7 +144,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   transition: transform .3s ease-in-out;
   display: flex;
   flex-direction: column;
-  padding: 166x;
+  padding: 16px;
   gap: 12px;
 }
 #dr.open { transform: translateX(0); }
@@ -205,7 +205,7 @@ footer { height: 30px; display: flex; align-items: center; justify-content: cent
     <circle class="r2" r="160"/>
     <circle class="core" r="62"/>
   </svg>
-  <h1>ARSI NAV</h1>
+  <h1>H.A.N</h1>
   <div id="bt">Проверка разрешений...</div>
   <div class="bar"><i id="bp"></i></div>
 </div>
@@ -283,7 +283,6 @@ footer { height: 30px; display: flex; align-items: center; justify-content: cent
 <footer>by_Arsi</footer>
 
 <script>
-// Четкая высокое разрешение карта-схема для автомагнитолы (SVG-Векторный холст)
 const MAP_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
 <rect width="800" height="800" fill="#05132d"/>
 <path d="M-100 200 Q 200 150 400 400 T 900 600" fill="none" stroke="#0c2d5e" stroke-width="80"/>
@@ -323,11 +322,9 @@ function renderMap() {
 }
 mapImg.onload = renderMap;
 
-// Масштабирование
 document.getElementById('zi').onclick = () => { zoom = Math.min(zoom + 0.2, 3); renderMap(); };
 document.getElementById('zo').onclick = () => { zoom = Math.max(zoom - 0.2, 0.6); renderMap(); };
 
-// Управление шторкой и вкладками
 const dr = document.getElementById('dr');
 document.getElementById('mb').onclick = () => dr.classList.add('open');
 document.getElementById('cl').onclick = () => dr.classList.remove('open');
@@ -341,7 +338,6 @@ document.querySelectorAll('.tabs button[data-t]').forEach(btn => {
   };
 });
 
-// Плеер видео
 const vf = document.getElementById('vf');
 const vd = document.getElementById('vd');
 document.getElementById('vx').onclick = () => {
@@ -351,3 +347,74 @@ document.getElementById('vx').onclick = () => {
 
 function playVideo(src) {
   vd.src = src;
+  vf.classList.add('on');
+  vd.play();
+}
+
+function requestPermissionsAndInit() {
+  const bp = document.getElementById('bp');
+  const bt = document.getElementById('bt');
+
+  bp.style.width = '30%';
+  
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        document.getElementById('gs').innerText = "GPS: Активен";
+        bp.style.width = '70%';
+      },
+      (err) => {
+        document.getElementById('gs').innerText = "GPS: Ошибка / Ожидание";
+      },
+      { enableHighAccuracy: true }
+    );
+  }
+
+  bt.innerText = "Сканирование видеофайлов...";
+  setTimeout(() => {
+    bp.style.width = '100%';
+    autoScanVideos();
+    setTimeout(() => {
+      document.getElementById('boot').classList.add('off');
+      resizeCanvas();
+    }, 500);
+  }, 1000);
+}
+
+function autoScanVideos() {
+  const vl = document.getElementById('vl');
+  const sampleVideos = [
+    { title: "Запись_Регистратора_01.mp4", src: "" }
+  ];
+
+  vl.innerHTML = '';
+  sampleVideos.forEach(v => {
+    const card = document.createElement('div');
+    card.className = 'vc';
+    card.innerHTML = `<video src="${v.src}"></video><span>🎬 ${v.title}</span>`;
+    card.onclick = () => {
+      if(v.src) playVideo(v.src);
+      else alert('Для воспроизведения выберите локальный видеофайл через кнопку ниже.');
+    };
+    vl.appendChild(card);
+  });
+}
+
+document.getElementById('av').onclick = () => document.getElementById('fv').click();
+document.getElementById('fv').onchange = (e) => {
+  const files = e.target.files;
+  const vl = document.getElementById('vl');
+  for (let file of files) {
+    const url = URL.createObjectURL(file);
+    const card = document.createElement('div');
+    card.className = 'vc';
+    card.innerHTML = `<video src="${url}"></video><span>🎬 ${file.name}</span>`;
+    card.onclick = () => playVideo(url);
+    vl.appendChild(card);
+  }
+};
+
+window.onload = requestPermissionsAndInit;
+</script>
+</body>
+</html>
