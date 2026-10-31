@@ -1,0 +1,17 @@
+{
+  "name": "Arsi Nav",
+  "short_name": "Arsi Nav",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#030a1c",
+  "theme_color": "#07204a",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
