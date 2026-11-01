@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.json">
-<title>H.A.N Edition</title>
+<title>H.A.N - Автомагнитола Edition</title>
 <style>
 :root {
   --bg: #030a1c;
@@ -108,7 +108,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 #eta { font-size: 16px; font-weight: 700; color: var(--c); margin-top: 4px; }
 #gs { font-size: 12px; color: var(--mu); margin-top: 2px; }
 
-/* Кнопки управления без наслоения */
+/* Кнопки управления */
 .ct {
   position: absolute;
   top: 16px;
@@ -206,7 +206,7 @@ footer { height: 30px; display: flex; align-items: center; justify-content: cent
     <circle class="core" r="62"/>
   </svg>
   <h1>H.A.N</h1>
-  <div id="bt">Загрузка карты и ресурсов...</div>
+  <div id="bt">Загрузка картографических данных...</div>
   <div class="bar"><i id="bp"></i></div>
 </div>
 
@@ -288,12 +288,13 @@ const ctx = canvas.getContext('2d');
 
 let zoom = 1;
 const mapImg = new Image();
-mapImg.src = 'my_map.png'; // Ваша личная карта
+mapImg.src = 'my_map.png';
 
 function resizeCanvas() {
-  if (canvas.parentElement) {
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
+  const container = canvas.parentElement;
+  if (container) {
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
   }
   renderMap();
 }
@@ -302,15 +303,29 @@ window.addEventListener('resize', resizeCanvas);
 
 function renderMap() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (mapImg.complete && mapImg.naturalWidth !== 0) {
+
+  if (mapImg.complete && mapImg.naturalWidth > 0) {
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.scale(zoom, zoom);
-    // Рисуем вашу карту по центру с сохранением пропорций или на весь экран
-    ctx.drawImage(mapImg, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+
+    // Вычисляем масштаб с сохранением пропорций оригинального изображения карты
+    const imgRatio = mapImg.naturalWidth / mapImg.naturalHeight;
+    const canvasRatio = canvas.width / canvas.height;
+    
+    let drawW, drawH;
+    if (canvasRatio > imgRatio) {
+      drawW = canvas.width;
+      drawH = canvas.width / imgRatio;
+    } else {
+      drawH = canvas.height;
+      drawW = canvas.height * imgRatio;
+    }
+
+    ctx.drawImage(mapImg, -drawW / 2, -drawH / 2, drawW, drawH);
     ctx.restore();
   } else {
-    // Запасной фон, пока картинка грузится
+    // Резервная отрисовка фона
     ctx.fillStyle = '#030a1c';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
@@ -320,8 +335,8 @@ mapImg.onload = () => {
   renderMap();
 };
 
-document.getElementById('zi').onclick = () => { zoom = Math.min(zoom + 0.2, 3); renderMap(); };
-document.getElementById('zo').onclick = () => { zoom = Math.max(zoom - 0.2, 0.6); renderMap(); };
+document.getElementById('zi').onclick = () => { zoom = Math.min(zoom + 0.2, 4); renderMap(); };
+document.getElementById('zo').onclick = () => { zoom = Math.max(zoom - 0.2, 0.4); renderMap(); };
 
 const dr = document.getElementById('dr');
 document.getElementById('mb').onclick = () => dr.classList.add('open');
@@ -354,7 +369,7 @@ function requestPermissionsAndInit() {
   const bt = document.getElementById('bt');
 
   bp.style.width = '40%';
-  resizeCanvas(); // Инициализация холста сразу при старте
+  resizeCanvas();
   
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(
@@ -363,19 +378,19 @@ function requestPermissionsAndInit() {
         bp.style.width = '80%';
       },
       (err) => {
-        document.getElementById('gs').innerText = "GPS: Ожидание...";
+        document.getElementById('gs').innerText = "GPS: Поиск...";
       },
       { enableHighAccuracy: true }
     );
   }
 
-  bt.innerText = "Инициализация карты...";
+  bt.innerText = "Инициализация...";
   setTimeout(() => {
     bp.style.width = '100%';
     autoScanVideos();
     setTimeout(() => {
       document.getElementById('boot').classList.add('off');
-      resizeCanvas(); // Повторный пересчет после скрытия заставки
+      resizeCanvas();
     }, 400);
   }, 800);
 }
@@ -393,7 +408,7 @@ function autoScanVideos() {
     card.innerHTML = `<video src="${v.src}"></video><span>🎬 ${v.title}</span>`;
     card.onclick = () => {
       if(v.src) playVideo(v.src);
-      else alert('Для воспроизведения выберите локальный видеофайл через кнопку ниже.');
+      else alert('Выберите локальный видеофайл через кнопку ниже.');
     };
     vl.appendChild(card);
   });
