@@ -206,7 +206,7 @@ footer { height: 30px; display: flex; align-items: center; justify-content: cent
     <circle class="core" r="62"/>
   </svg>
   <h1>H.A.N</h1>
-  <div id="bt">Проверка разрешений...</div>
+  <div id="bt">Загрузка карты и ресурсов...</div>
   <div class="bar"><i id="bp"></i></div>
 </div>
 
@@ -283,32 +283,42 @@ footer { height: 30px; display: flex; align-items: center; justify-content: cent
 <footer>by_Arsi</footer>
 
 <script>
-const MAP_SVG = 'my_map.png';
-
 const canvas = document.getElementById('map');
 const ctx = canvas.getContext('2d');
-const mapImg = new Image();
-mapImg.src = MAP_SVG;
-
-function resizeCanvas() {
-  canvas.width = canvas.parentElement.clientWidth;
-  canvas.height = canvas.parentElement.clientHeight;
-  renderMap();
-}
-window.addEventListener('resize', resizeCanvas);
 
 let zoom = 1;
+const mapImg = new Image();
+mapImg.src = 'my_map.png'; // Ваша личная карта
+
+function resizeCanvas() {
+  if (canvas.parentElement) {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+  }
+  renderMap();
+}
+
+window.addEventListener('resize', resizeCanvas);
+
 function renderMap() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (mapImg.complete) {
+  if (mapImg.complete && mapImg.naturalWidth !== 0) {
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.scale(zoom, zoom);
+    // Рисуем вашу карту по центру с сохранением пропорций или на весь экран
     ctx.drawImage(mapImg, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
     ctx.restore();
+  } else {
+    // Запасной фон, пока картинка грузится
+    ctx.fillStyle = '#030a1c';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 }
-mapImg.onload = renderMap;
+
+mapImg.onload = () => {
+  renderMap();
+};
 
 document.getElementById('zi').onclick = () => { zoom = Math.min(zoom + 0.2, 3); renderMap(); };
 document.getElementById('zo').onclick = () => { zoom = Math.max(zoom - 0.2, 0.6); renderMap(); };
@@ -343,30 +353,31 @@ function requestPermissionsAndInit() {
   const bp = document.getElementById('bp');
   const bt = document.getElementById('bt');
 
-  bp.style.width = '30%';
+  bp.style.width = '40%';
+  resizeCanvas(); // Инициализация холста сразу при старте
   
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         document.getElementById('gs').innerText = "GPS: Активен";
-        bp.style.width = '70%';
+        bp.style.width = '80%';
       },
       (err) => {
-        document.getElementById('gs').innerText = "GPS: Ошибка / Ожидание";
+        document.getElementById('gs').innerText = "GPS: Ожидание...";
       },
       { enableHighAccuracy: true }
     );
   }
 
-  bt.innerText = "Сканирование видеофайлов...";
+  bt.innerText = "Инициализация карты...";
   setTimeout(() => {
     bp.style.width = '100%';
     autoScanVideos();
     setTimeout(() => {
       document.getElementById('boot').classList.add('off');
-      resizeCanvas();
-    }, 500);
-  }, 1000);
+      resizeCanvas(); // Повторный пересчет после скрытия заставки
+    }, 400);
+  }, 800);
 }
 
 function autoScanVideos() {
